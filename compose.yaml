@@ -14,29 +14,29 @@ x-app: &default-app
       condition: "service_started"
       required: false
   env_file:
-    - ".env"
+    - ".env.example"
   restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
   stop_grace_period: "3s"
   tty: true
   volumes:
-    - "${DOCKER_WEB_VOLUME:-./public:/app/public}"
+    - "${DOCKER_WEB_VOLUME:-./public:/db/public}"
 
 x-assets: &default-assets
   build:
     context: "."
     target: "assets"
     args:
-      - "UID=${UID:-1000}"
-      - "GID=${GID:-1000}"
+    # - "UID=${UID:-1000}"
+    # - "GID=${GID:-1000}"
       - "NODE_ENV=${NODE_ENV:-production}"
   env_file:
-    - ".env"
+    - ".env.example"
   profiles: ["assets"]
   restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
   stop_grace_period: "0"
   tty: true
   volumes:
-    - ".:/app"
+    - ".:/db-data"
 
 services:
   postgres:
@@ -71,6 +71,8 @@ services:
 
   web:
     <<: *default-app
+    labels:
+      shipyard.route: '/'
     command: "yarn watch-${NODE_ENV:-production}"
     deploy:
       resources:
@@ -89,10 +91,14 @@ services:
 
   js:
     <<: *default-assets
+    labels:
+      shipyard.job: true
     command: "../run yarn:build:js"
 
   css:
     <<: *default-assets
+    labels:
+      shipyard.job: true
     command: "../run yarn:build:css"
 
 volumes:
