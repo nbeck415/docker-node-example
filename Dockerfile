@@ -1,6 +1,12 @@
 FROM node:20.12.2-bookworm-slim AS assets
 LABEL maintainer="Nick Janetakis <nick.janetakis@gmail.com>"
 
+WORKDIR /app
+
+COPY .env.example .
+
+RUN cp .env.example .env
+
 WORKDIR /app/frontend
 
 ARG UID=1000
